@@ -154,8 +154,6 @@ def download_file(filename):
     log(f"Download request for: {filename}")
     return send_from_directory(OUTPUT_FOLDER, filename, as_attachment=True)
 
-if __name__ == '__main__':
-    log("Starting backend Flask server on http://localhost:5000")
-    log(f"Uploads will be stored in: {UPLOAD_FOLDER}")
-    log(f"Converted files will be saved to: {OUTPUT_FOLDER}")
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0', port=port)
