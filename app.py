@@ -50,26 +50,26 @@ def pdf_to_word():
 @app.route('/convert/image-to-pdf', methods=['POST'])
 def image_to_pdf():
     try:
-        files = request.files.getlist("files")  # <-- Get ALL images
+        # accept BOTH single file and multiple files
+        files = request.files.getlist("files")
+        
+        # If frontend sends only "file"
+        if len(files) == 0 and "file" in request.files:
+            files = [request.files["file"]]
 
-        if not files or len(files) == 0:
-            return jsonify({"status": "error", "message": "No images uploaded"})
+        if len(files) == 0:
+            return jsonify({"status": "error", "message": "No image uploaded"})
 
-        images = []
-
-        # Convert all images to RGB
-        for file in files:
-            img = Image.open(file.stream).convert("RGB")
-            images.append(img)
+        imgs = [Image.open(f.stream).convert("RGB") for f in files]
 
         output_name = unique_filename("pdf")
         output_path = os.path.join(OUTPUT_FOLDER, output_name)
 
-        # Save first image + append rest as new pages
-        images[0].save(
+        # Save one or multiple images into PDF
+        imgs[0].save(
             output_path,
             save_all=True,
-            append_images=images[1:] if len(images) > 1 else None
+            append_images=imgs[1:] if len(imgs) > 1 else None
         )
 
         return jsonify({"status": "success", "filename": output_name})
@@ -77,6 +77,7 @@ def image_to_pdf():
     except Exception as e:
         log(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)})
+
 
 
 @app.route('/convert/pdf-to-jpg', methods=['POST'])
@@ -154,4 +155,5 @@ def download_file(filename):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host='0.0.0.0', port=port)
+
 
